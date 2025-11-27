@@ -791,6 +791,9 @@
     </div>
   </div>
 
+  <!-- Background music (replace src with your own file) -->
+  <audio id="backgroundAudio" src="audio/christmas-song.mp3" preload="auto" loop></audio>
+
   <script>
     /**********************************************
      * CONFIGURATION – EDIT THESE PARTS
@@ -851,6 +854,39 @@
     const modalTitle = document.getElementById("modalTitle");
     const modalDateLabel = document.getElementById("modalDateLabel");
     const modalBody = document.getElementById("modalBody");
+    const backgroundAudio = document.getElementById("backgroundAudio");
+
+    let audioStarted = false;
+
+    function startBackgroundAudio() {
+      if (!backgroundAudio || audioStarted) return;
+      backgroundAudio.volume = 0.35;
+
+      const resumeOnInteraction = () => {
+        backgroundAudio
+          .play()
+          .then(() => {
+            audioStarted = true;
+            document.removeEventListener("pointerdown", resumeOnInteraction);
+          })
+          .catch(() => {
+            document.addEventListener("pointerdown", resumeOnInteraction, { once: true });
+          });
+      };
+
+      const playPromise = backgroundAudio.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise
+          .then(() => {
+            audioStarted = true;
+          })
+          .catch(() => {
+            document.addEventListener("pointerdown", resumeOnInteraction, { once: true });
+          });
+      } else {
+        audioStarted = true;
+      }
+    }
 
     function formatDateLabel(date) {
       const options = { weekday: "short", day: "numeric", month: "short" };
@@ -1005,6 +1041,7 @@
       lockScreenEl.style.display = "none";
       appEl.style.opacity = "1";
       appEl.style.pointerEvents = "auto";
+      startBackgroundAudio();
     }
 
     function handleUnlockAttempt() {
@@ -1039,6 +1076,7 @@
         lockScreenEl.style.display = "none";
         appEl.style.opacity = "1";
         appEl.style.pointerEvents = "auto";
+        startBackgroundAudio();
       } else {
         lockScreenEl.style.display = "flex";
       }
