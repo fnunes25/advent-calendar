@@ -59,7 +59,7 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      z-index: -1;
+      z-index: 999;
       background-image:
         radial-gradient(circle, rgba(255, 255, 255, 0.8) 1.5px, transparent 1.5px),
         radial-gradient(circle, rgba(255, 255, 255, 0.6) 1.2px, transparent 1.2px),
@@ -772,6 +772,15 @@
       `,
     };
 
+    dayContent[2] = {
+      title: "Day 2 – Hello",
+      emoji: "🌟",
+      html: `
+        <p>Welcome to our own little Christmas countdown. Every day this month, something small will be waiting for you here. 🎄</p>
+        <p>Thank you for being you. I hope this month feels extra cozy, soft and loved.</p>
+      `,
+    };
+
     dayContent[24] = {
       title: "Day 24 – Christmas Eve",
       emoji: "🎁",
@@ -805,6 +814,14 @@
     const backgroundAudio = document.getElementById("backgroundAudio");
     const floatingBuddy = document.getElementById("floatingBuddy");
     const openedDaysKey = `adventCalendarOpenedDays-${CALENDAR_YEAR}`;
+    const ERROR_SOUND_FILES = [
+      "sound-errors/error-1.m4a",
+      "sound-errors/error-2.m4a",
+      "sound-errors/error-3.m4a",
+      "sound-errors/error-4.m4a",
+      "sound-errors/error-5.m4a",
+      "sound-errors/error-6.m4a",
+    ];
     const openedDays = new Set();
     let floatingAnimationId = null;
     let floatingLastTimestamp = null;
@@ -826,6 +843,30 @@
       } catch (err) {
         console.warn("Unable to read opened days from storage", err);
       }
+    }
+
+    function loadErrorSounds() {
+      ERROR_SOUND_FILES.forEach((url) => {
+        const audio = new Audio(url);
+        audio.preload = "auto";
+        errorSounds.push(audio);
+      });
+    }
+
+    function playErrorSound() {
+      if (!errorSounds.length) return;
+
+      const clip = errorSounds[errorSoundIndex];
+
+      // Reset ONLY the clip being played
+      clip.pause();
+      clip.currentTime = 0;
+
+      // Play it
+      clip.play().catch(() => {});
+
+      // Move to next sound
+      errorSoundIndex = (errorSoundIndex + 1) % errorSounds.length;
     }
 
     function persistOpenedDays() {
@@ -891,6 +932,8 @@
       floatingBuddy.style.opacity = "0";
     }
     let audioStarted = false;
+    const errorSounds = [];
+    let errorSoundIndex = 0;
 
     function startBackgroundAudio() {
       if (!backgroundAudio || audioStarted) return;
@@ -1018,8 +1061,9 @@
       if (!isUnlockedNow) {
         doorEl.classList.add("shake");
         setTimeout(() => doorEl.classList.remove("shake"), 380);
-        return;
-      }
+        playErrorSound();
+      return;
+    }
 
       markDayOpened(day);
       doorEl.classList.add("open");
@@ -1115,6 +1159,7 @@
     }
 
     loadOpenedDays();
+    loadErrorSounds();
     setTodayBadge();
     renderCalendar();
     initLockState();
