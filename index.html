@@ -664,9 +664,20 @@
 
   <!-- Password Lock Screen -->
   <div class="lock-screen-backdrop" id="lockScreen">
-    <div class="lock-floating" aria-hidden="true">
-      <!-- Replace the src with your own image inside images/ -->
-      <img id="floatingBuddy" src="images/zara.png" alt="" />
+    <div class="lock-floating" aria-hidden="true" data-buddy="0">
+      <img src="images/zara.png" alt="" loading="lazy" />
+    </div>
+    <div class="lock-floating" aria-hidden="true" data-buddy="1">
+      <img src="images/zara2.png" alt="" loading="lazy" />
+    </div>
+    <div class="lock-floating" aria-hidden="true" data-buddy="1">
+      <img src="images/zara3.png" alt="" loading="lazy" />
+    </div>
+    <div class="lock-floating" aria-hidden="true" data-buddy="1">
+      <img src="images/zara4.png" alt="" loading="lazy" />
+    </div>
+    <div class="lock-floating" aria-hidden="true" data-buddy="1">
+      <img src="images/zara5.png" alt="" loading="lazy" />
     </div>
     <div class="lock-card" id="lockCard">
       <div class="lock-card-inner">
@@ -812,7 +823,7 @@
     const modalDateLabel = document.getElementById("modalDateLabel");
     const modalBody = document.getElementById("modalBody");
     const backgroundAudio = document.getElementById("backgroundAudio");
-    const floatingBuddy = document.getElementById("floatingBuddy");
+    const floatingBuddies = Array.from(document.querySelectorAll(".lock-floating"));
     const openedDaysKey = `adventCalendarOpenedDays-${CALENDAR_YEAR}`;
     const ERROR_SOUND_FILES = [
       "sound-errors/error-1.m4a",
@@ -823,10 +834,20 @@
       "sound-errors/error-6.m4a",
     ];
     const openedDays = new Set();
+    const floatingSprites = floatingBuddies.map((wrapper, index) => ({
+      wrapper,
+      img: wrapper.querySelector("img"),
+      velocity: {
+        x: 0.12 + index * 0.03,
+        y: 0.15 + index * 0.025,
+      },
+      position: {
+        x: 50 + index * 80,
+        y: 70 + index * 40,
+      },
+    }));
     let floatingAnimationId = null;
     let floatingLastTimestamp = null;
-    const floatingVelocity = { x: 0.15, y: 0.18 }; // px per ms
-    const floatingPosition = { x: 60, y: 80 };
 
     function loadOpenedDays() {
       try {
@@ -880,56 +901,79 @@
     }
 
     function animateFloating(timestamp) {
-      if (!floatingBuddy) return;
+      if (!floatingSprites.length) return;
       if (!floatingLastTimestamp) floatingLastTimestamp = timestamp;
       const delta = timestamp - floatingLastTimestamp;
       floatingLastTimestamp = timestamp;
 
-      floatingPosition.x += floatingVelocity.x * delta;
-      floatingPosition.y += floatingVelocity.y * delta;
+      floatingSprites.forEach((sprite) => {
+        const { wrapper, velocity, position } = sprite;
+        position.x += velocity.x * delta;
+        position.y += velocity.y * delta;
 
-      const buddyWidth = floatingBuddy.offsetWidth || 0;
-      const buddyHeight = floatingBuddy.offsetHeight || 0;
-      const maxX = Math.max(0, window.innerWidth - buddyWidth - 20);
-      const maxY = Math.max(0, window.innerHeight - buddyHeight - 20);
+        const width = wrapper.offsetWidth || 0;
+        const height = wrapper.offsetHeight || 0;
+        const maxX = Math.max(0, window.innerWidth - width - 20);
+        const maxY = Math.max(0, window.innerHeight - height - 20);
 
-      if (floatingPosition.x <= 10 || floatingPosition.x >= maxX) {
-        floatingVelocity.x *= -1;
-        floatingPosition.x = Math.min(Math.max(floatingPosition.x, 10), maxX);
-      }
-      if (floatingPosition.y <= 10 || floatingPosition.y >= maxY) {
-        floatingVelocity.y *= -1;
-        floatingPosition.y = Math.min(Math.max(floatingPosition.y, 10), maxY);
-      }
+        if (position.x <= 10 || position.x >= maxX) {
+          velocity.x *= -1;
+          position.x = Math.min(Math.max(position.x, 10), maxX);
+        }
+        if (position.y <= 10 || position.y >= maxY) {
+          velocity.y *= -1;
+          position.y = Math.min(Math.max(position.y, 10), maxY);
+        }
 
-      floatingBuddy.style.transform = `translate3d(${floatingPosition.x}px, ${floatingPosition.y}px, 0)`;
+        wrapper.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
+      });
+
+      floatingAnimationId = requestAnimationFrame(animateFloating);
+    }
+
+    function beginFloatingAnimation() {
+      floatingBuddies.forEach((wrapper, index) => {
+        wrapper.style.opacity = index === 0 ? "0.9" : "0.75";
+      });
+      floatingLastTimestamp = null;
       floatingAnimationId = requestAnimationFrame(animateFloating);
     }
 
     function startFloatingBuddy() {
-      if (!floatingBuddy || floatingAnimationId) return;
+      if (!floatingSprites.length || floatingAnimationId) return;
 
-      const begin = () => {
-        floatingBuddy.style.opacity = "0.9";
-        floatingLastTimestamp = null;
-        floatingAnimationId = requestAnimationFrame(animateFloating);
-      };
+      const spritesNeedingLoad = floatingSprites.filter(
+        ({ img }) => img && !img.complete
+      );
 
-      if (floatingBuddy.complete) {
-        begin();
-      } else {
-        floatingBuddy.addEventListener("load", begin, { once: true });
+      if (!spritesNeedingLoad.length) {
+        beginFloatingAnimation();
+        return;
       }
+
+      let remaining = spritesNeedingLoad.length;
+      spritesNeedingLoad.forEach(({ img }) => {
+        img.addEventListener(
+          "load",
+          () => {
+            remaining -= 1;
+            if (remaining === 0) beginFloatingAnimation();
+          },
+          { once: true }
+        );
+      });
     }
 
     function stopFloatingBuddy() {
-      if (!floatingBuddy) return;
+      if (!floatingSprites.length) return;
       if (floatingAnimationId) {
         cancelAnimationFrame(floatingAnimationId);
         floatingAnimationId = null;
       }
       floatingLastTimestamp = null;
-      floatingBuddy.style.opacity = "0";
+      floatingBuddies.forEach((wrapper) => {
+        wrapper.style.opacity = "0";
+      });
     }
     let audioStarted = false;
     const errorSounds = [];
