@@ -302,37 +302,18 @@
       transform: rotateY(120deg);
     }
 
-    .door-lock-indicator {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-end;
-      padding: 6px 8px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease-out;
-      z-index: 3;
+    .door.shake .door-panels {
+      animation: windowShake 0.35s ease-in-out;
     }
 
-    .door.locked .door-lock-indicator {
-      opacity: 1;
+    @keyframes windowShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+      100% { transform: translateX(0); }
     }
 
-    .door.open .door-lock-indicator {
-      opacity: 0;
-    }
-
-    .door-lock-indicator span {
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      font-size: 0.72rem;
-      padding: 3px 7px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
 
     .dot-small {
       width: 6px;
@@ -356,34 +337,6 @@
       gap: 10px;
       align-items: center;
       justify-content: space-between;
-    }
-
-    .legend {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .legend-swatch {
-      width: 12px;
-      height: 12px;
-      border-radius: 4px;
-      border: 1px solid #d4d4d8;
-    }
-
-    .legend-swatch.locked {
-      background: var(--door-red-dark);
-    }
-
-    .legend-swatch.open {
-      background: var(--door-green);
     }
 
     .tiny {
@@ -740,29 +693,6 @@
       <section class="calendar" id="calendarGrid">
         <!-- Doors injected by JavaScript -->
       </section>
-
-      <footer class="calendar-footer">
-        <div class="calendar-footer-row">
-          <div class="legend">
-            <div class="legend-item">
-              <span class="legend-swatch locked"></span>
-              <span>Locked (too early)</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch open"></span>
-              <span>Openable today</span>
-            </div>
-          </div>
-        </div>
-        <div class="calendar-footer-row">
-          <span class="tiny">
-            Doors unlock using your phone's date for December. After Christmas, everything opens.
-          </span>
-          <span class="love-note tiny">
-            Made with <span class="heart">❤️</span> just for you.
-          </span>
-        </div>
-      </footer>
     </div>
   </div>
 
@@ -782,12 +712,6 @@
       <div class="modal-body" id="modalBody">
         <!-- Injected content -->
       </div>
-      <footer class="modal-footer">
-        <span class="badge-soft">
-          <span class="dot-small"></span>
-          <span id="modalHint">You unlocked today’s surprise.</span>
-        </span>
-      </footer>
     </div>
   </div>
 
@@ -855,7 +779,35 @@
     const modalDateLabel = document.getElementById("modalDateLabel");
     const modalBody = document.getElementById("modalBody");
     const backgroundAudio = document.getElementById("backgroundAudio");
+    const openedDaysKey = `adventCalendarOpenedDays-${CALENDAR_YEAR}`;
+    const openedDays = new Set();
 
+    function loadOpenedDays() {
+      try {
+        const stored = localStorage.getItem(openedDaysKey);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((day) => {
+            if (typeof day === "number" && Number.isFinite(day)) {
+              openedDays.add(day);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Unable to read opened days from storage", err);
+      }
+    }
+
+    function persistOpenedDays() {
+      localStorage.setItem(openedDaysKey, JSON.stringify(Array.from(openedDays)));
+    }
+
+    function markDayOpened(day) {
+      if (openedDays.has(day)) return;
+      openedDays.add(day);
+      persistOpenedDays();
+    }
     let audioStarted = false;
 
     function startBackgroundAudio() {
@@ -962,22 +914,16 @@
       panels.appendChild(leftPanel);
       panels.appendChild(rightPanel);
 
-      const lockIndicator = document.createElement("div");
-      lockIndicator.className = "door-lock-indicator";
-      lockIndicator.innerHTML = `
-        <span>
-          <span class="dot-small"></span>
-          <span>${unlocked ? "Tap to open" : "Opens later"}</span>
-        </span>
-      `;
-
       const back = document.createElement("div");
       back.className = "door-back";
       back.innerHTML = `<div class="door-back-icon">💌</div>`;
 
       door.appendChild(back);
       door.appendChild(panels);
-      door.appendChild(lockIndicator);
+
+      if (openedDays.has(day)) {
+        door.classList.add("open");
+      }
 
       door.addEventListener("click", () => handleDoorClick(door, day));
 
@@ -993,6 +939,7 @@
         return;
       }
 
+      markDayOpened(day);
       doorEl.classList.add("open");
       showDayModal(day);
     }
@@ -1082,6 +1029,7 @@
       }
     }
 
+    loadOpenedDays();
     setTodayBadge();
     renderCalendar();
     initLockState();
