@@ -531,6 +531,8 @@
       padding: 18px 16px 16px;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
 
     @media (min-width: 640px) {
@@ -545,6 +547,8 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
     }
 
     .modal-title {
@@ -583,6 +587,8 @@
       font-size: 0.92rem;
       line-height: 1.6;
       color: #374151;
+      position: relative;
+      z-index: 1;
     }
 
     .modal-body p + p {
@@ -602,6 +608,64 @@
       margin: 12px 0;
     }
 
+    .modal-star-burst {
+      position: absolute;
+      left: 50%;
+      top: 40%;
+      width: 240px;
+      height: 240px;
+      transform: translate(-50%, -50%) scale(0.4);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7), transparent 55%),
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 40%),
+        radial-gradient(circle at 70% 40%, rgba(255, 255, 255, 0.35), transparent 45%);
+      opacity: 0;
+      filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.4));
+      pointer-events: none;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+    }
+
+    .modal-star-burst::after {
+      content: "";
+      position: absolute;
+      inset: -30%;
+      background: conic-gradient(
+        from 0deg,
+        rgba(255, 255, 255, 0.45),
+        transparent 25%,
+        rgba(255, 255, 255, 0.3) 45%,
+        transparent 70%
+      );
+      border-radius: 50%;
+      filter: blur(2px);
+    }
+
+    .modal-star-burst.burst-active {
+      animation: modalStarBurst 1s ease-out forwards;
+    }
+
+    @keyframes modalStarBurst {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4) rotate(-10deg);
+      }
+      40% {
+        opacity: 0.85;
+        transform: translate(-50%, -50%) scale(1) rotate(5deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.4) rotate(12deg);
+      }
+    }
+
     .modal-footer {
       margin-top: 10px;
       display: flex;
@@ -611,6 +675,8 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+      position: relative;
+      z-index: 1;
     }
 
     .badge-soft {
@@ -734,6 +800,7 @@
   <!-- Modal for content -->
   <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
+      <span class="modal-star-burst" aria-hidden="true"></span>
       <header class="modal-header">
         <div class="modal-title">
           <span id="modalEmoji">✨</span>
@@ -778,7 +845,7 @@
       title: "Dia 1 – Uma imagem vale mais...",
       emoji: "🌟",
       html: `
-        <p>Hoje é dia 1, e sendo o primeiro dia do advento gostava que partilhasses comigo uma imagem que represente aquilo que sentiste no dia em que me viste pela primeira vez.</p>
+        <p>Hoje é dia 1, e sendo o primeiro dia do advento, gostava que partilhasses comigo uma imagem que te faça sentir o mesmo que sentiste quando estivemos juntos pela primeira vez.</p>
         <p>Para mim, é esta:</p>
         <img src="images/foggy_beach.jpg" loading="lazy" />
       `,
@@ -814,6 +881,7 @@
     const modalTitle = document.getElementById("modalTitle");
     const modalDateLabel = document.getElementById("modalDateLabel");
     const modalBody = document.getElementById("modalBody");
+    const modalStarBurst = document.querySelector(".modal-star-burst");
     const backgroundAudio = document.getElementById("backgroundAudio");
     const floatingBuddies = Array.from(document.querySelectorAll(".lock-floating"));
     const openedDaysKey = `adventCalendarOpenedDays-${CALENDAR_YEAR}`;
@@ -1106,6 +1174,14 @@
       showDayModal(day);
     }
 
+    function triggerModalStarBurst(emoji = "✨") {
+      if (!modalStarBurst) return;
+      modalStarBurst.textContent = emoji;
+      modalStarBurst.classList.remove("burst-active");
+      void modalStarBurst.offsetWidth;
+      modalStarBurst.classList.add("burst-active");
+    }
+
     function showDayModal(day) {
       const content =
         dayContent[day] || {
@@ -1120,6 +1196,7 @@
       const date = getCalendarDate(day);
       modalDateLabel.textContent = formatDateLabel(date);
       modalBody.innerHTML = content.html || "";
+      triggerModalStarBurst(content.emoji || "✨");
 
       modalBackdrop.classList.add("visible");
       modalBackdrop.setAttribute("aria-hidden", "false");
