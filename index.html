@@ -1,826 +1,840 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Advent Calendar 🎄</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;500;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --bg: #0b2713;              /* deep green background */
-      --bg-accent: #14532d;       /* lighter green */
-      --card-bg: #fefdf8;         /* warm off-white */
-      --card-border: #e4e4e4;
-      --door-red: #b91c1c;
-      --door-red-dark: #7f1d1d;
-      --door-green: #166534;
-      --door-cream: #fef3c7;
-      --text-main: #111827;
-      --text-muted: #6b7280;
-      --accent-gold: #f59e0b;
-      --accent-gold-soft: #fef3c7;
-      --accent-green: #16a34a;
-      --error: #dc2626;
-
-      --radius-lg: 20px;
-      --radius-xl: 24px;
-      --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.45);
-      --transition-fast: 0.18s ease-out;
-      --transition-slow: 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      min-height: 100vh;
-      font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-      background:
-        radial-gradient(circle at top, #15803d 0, transparent 55%),
-        radial-gradient(circle at bottom, #7f1d1d 0, transparent 60%),
-        var(--bg);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    /* Falling snow – more visible */
-    .snow-overlay {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 999;
-      background-image:
-        radial-gradient(circle, rgba(255, 255, 255, 0.8) 1.5px, transparent 1.5px),
-        radial-gradient(circle, rgba(255, 255, 255, 0.6) 1.2px, transparent 1.2px),
-        radial-gradient(circle, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
-      background-size: 200px 200px, 160px 160px, 120px 120px;
-      animation: snowFall 25s linear infinite;
-      opacity: 0.7;
-    }
-
-    @keyframes snowFall {
-      0% {
-        background-position: 0 0, 40px -40px, 80px -80px;
-      }
-      100% {
-        background-position: 0 600px, 40px 560px, 80px 520px;
-      }
-    }
-
-    .app {
-      width: 100%;
-      max-width: 900px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--card-border);
-      box-shadow: var(--shadow-soft);
-      padding: 20px 16px 20px;
-    }
-
-    @media (min-width: 640px) {
-      .card {
-        padding: 24px;
-      }
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .title {
-      font-size: 1.4rem;
-      letter-spacing: 0.04em;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .title span.emoji {
-      font-size: 1.5rem;
-    }
-
-    .subtitle {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .subtitle .pill {
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      padding: 2px 8px;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      background: #f3f4f6;
-      color: #374151;
-    }
-
-    .date-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-    }
-
-    .date-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #22c55e;
-    }
-
-    .calendar {
-      margin-top: 8px;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    @media (min-width: 640px) {
-      .calendar {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 12px;
-      }
-    }
-
-    /* DOORS – split in the middle like a little pair of doors */
-
-    .door {
-      position: relative;
-      height: 86px;
-      border-radius: var(--radius-lg);
-      cursor: pointer;
-      background: #e2e8f0;
-      padding: 4px;
-      border: 1px solid #d4d4d8;
-      perspective: 1400px;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-    }
-
-    @media (min-width: 640px) {
-      .door {
-        height: 102px;
-      }
-    }
-
-    .door:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 22px rgba(15, 23, 42, 0.22);
-    }
-
-    .door-back {
-      position: absolute;
-      inset: 6px;
-      border-radius: calc(var(--radius-lg) - 6px);
-      background: var(--door-cream);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--door-red-dark);
-      border: 1px solid rgba(148, 27, 27, 0.15);
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.4),
-        inset 0 12px 24px rgba(15, 23, 42, 0.08);
-      z-index: 1;
-    }
-
-    .door-back-icon {
-      font-size: 1.4rem;
-    }
-
-    .door-panels {
-      position: absolute;
-      inset: 4px;
-      display: flex;
-      border-radius: calc(var(--radius-lg) - 4px);
-      overflow: hidden;
-      transform-style: preserve-3d;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .door-panel {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff7ed;
-      background: linear-gradient(135deg, #b91c1c, #7f1d1d);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.15),
-        inset 0 -12px 18px rgba(15, 23, 42, 0.25);
-      transition: transform var(--transition-slow);
-      transform-origin: left center;
-    }
-
-    .door-panel.right {
-      transform-origin: right center;
-    }
-
-    .door-panel + .door-panel {
-      border-left: 1px solid rgba(255, 255, 255, 0.25);
-    }
-
-    .door-panel::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.15));
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .door-panel-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-shadow: 0 6px 10px rgba(0, 0, 0, 0.45);
-      position: relative;
-      z-index: 1;
-    }
-
-    .door-number {
-      font-size: 1.1rem;
-    }
-
-    .door-accent {
-      font-size: 1.2rem;
-    }
-
-    .door.unlocked .door-panel {
-      background: linear-gradient(135deg, #15803d, #166534);
-    }
-
-    .door.locked .door-panel {
-      background: linear-gradient(135deg, #991b1b, #7f1d1d);
-    }
-
-    .door.open .door-panel.left {
-      transform: rotateY(-120deg);
-    }
-
-    .door.open .door-panel.right {
-      transform: rotateY(120deg);
-    }
-
-    .door.shake .door-panels {
-      animation: windowShake 0.35s ease-in-out;
-    }
-
-    @keyframes windowShake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      50% { transform: translateX(5px); }
-      75% { transform: translateX(-3px); }
-      100% { transform: translateX(0); }
-    }
-
-
-    .dot-small {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--accent-gold);
-    }
-
-    .calendar-footer {
-      margin-top: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .calendar-footer-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .tiny {
-      font-size: 0.78rem;
-    }
-
-    .love-note {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .love-note span.heart {
-      font-size: 0.95rem;
-      color: #dc2626;
-    }
-
-    /* LOCK SCREEN – flat style */
-
-    .lock-screen-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.9);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 16px;
-      overflow: hidden;
-    }
-
-    .lock-card {
-      width: 100%;
-      max-width: 360px;
-      background: #fefdf8;
-      border-radius: var(--radius-xl);
-      border: 1px solid #e5e7eb;
-      padding: 20px 18px 16px;
-      box-shadow: var(--shadow-soft);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .lock-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        repeating-linear-gradient(
-          -45deg,
-          rgba(248, 250, 252, 0),
-          rgba(248, 250, 252, 0) 10px,
-          rgba(248, 250, 252, 0.5) 10px,
-          rgba(248, 250, 252, 0.5) 20px
-        );
-      opacity: 0.12;
-      pointer-events: none;
-    }
-
-    .lock-card-inner {
-      position: relative;
-      z-index: 1;
-    }
-
-    .lock-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .lock-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: #1f2937;
-    }
-
-    .lock-tagline {
-      font-size: 0.86rem;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    .lock-input-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .lock-input-row input {
-      flex: 1;
-      padding: 9px 11px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      color: #111827;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    .lock-input-row input:focus {
-      border-color: #f97316;
-      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.4);
-    }
-
-    .btn {
-      border-radius: 999px;
-      border: none;
-      padding: 9px 16px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: linear-gradient(to right, #f59e0b, #f97316);
-      color: #111827;
-      box-shadow: 0 8px 22px rgba(180, 83, 9, 0.4);
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 10px 24px rgba(180, 83, 9, 0.5);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 6px 16px rgba(180, 83, 9, 0.4);
-    }
-
-    .lock-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .lock-error {
-      margin-top: 4px;
-      font-size: 0.8rem;
-      color: var(--error);
-      min-height: 1.1em;
-    }
-
-    .lock-card.shake {
-      animation: shake 0.4s ease-in-out;
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-6px); }
-      50% { transform: translateX(6px); }
-      75% { transform: translateX(-4px); }
-      100% { transform: translateX(0); }
-    }
-
-    /* MODAL */
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 40;
-    }
-
-    .modal-backdrop.visible {
-      display: flex;
-    }
-
-    .modal {
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      background: #fefdf8;
-      border-radius: var(--radius-xl);
-      border: 1px solid #e5e7eb;
-      box-shadow: var(--shadow-soft);
-      padding: 18px 16px 16px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-
-    @media (min-width: 640px) {
-      .modal {
-        padding: 20px 20px 18px;
-      }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .modal-title {
-      font-size: 1rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #111827;
-    }
-
-    .pill-soft {
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 0.75rem;
-      border: 1px solid #e5e7eb;
-      background: #f3f4f6;
-      color: #4b5563;
-    }
-
-    .modal-close {
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      background: #f3f4f6;
-      color: #4b5563;
-      padding: 6px 10px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .modal-body {
-      overflow-y: auto;
-      font-size: 0.92rem;
-      line-height: 1.6;
-      color: #374151;
-      position: relative;
-      z-index: 1;
-    }
-
-    .modal-body p + p {
-      margin-top: 10px;
-    }
-
-    .modal-body img,
-    .modal-body video {
-      max-width: 100%;
-      border-radius: 16px;
-      margin: 12px 0;
-      display: block;
-    }
-
-    .modal-body audio {
-      width: 100%;
-      margin: 12px 0;
-    }
-
-    .modal-star-burst {
-      position: absolute;
-      left: 50%;
-      top: 40%;
-      width: 240px;
-      height: 240px;
-      transform: translate(-50%, -50%) scale(0.4);
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7), transparent 55%),
-        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 40%),
-        radial-gradient(circle at 70% 40%, rgba(255, 255, 255, 0.35), transparent 45%);
-      opacity: 0;
-      filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.4));
-      pointer-events: none;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-      color: rgba(255, 255, 255, 0.9);
-      text-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
-    }
-
-    .modal-star-burst::after {
-      content: "";
-      position: absolute;
-      inset: -30%;
-      background: conic-gradient(
-        from 0deg,
-        rgba(255, 255, 255, 0.45),
-        transparent 25%,
-        rgba(255, 255, 255, 0.3) 45%,
-        transparent 70%
-      );
-      border-radius: 50%;
-      filter: blur(2px);
-    }
-
-    .modal-star-burst.burst-active {
-      animation: modalStarBurst 1s ease-out forwards;
-    }
-
-    @keyframes modalStarBurst {
-      0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.4) rotate(-10deg);
-      }
-      40% {
-        opacity: 0.85;
-        transform: translate(-50%, -50%) scale(1) rotate(5deg);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1.4) rotate(12deg);
-      }
-    }
-
-    .modal-footer {
-      margin-top: 10px;
-      display: flex;
-      justify-content: flex-end;
-      font-size: 0.8rem;
-      color: #6b7280;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-    }
-
-    .badge-soft {
-      border-radius: 999px;
-      padding: 3px 9px;
-      border: 1px solid #e5e7eb;
-      background: #f3f4f6;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .badge-soft .dot-small {
-      background: var(--accent-green);
-    }
-
-    /* Focus styles */
-    button,
-    input {
-      font-family: inherit;
-    }
-
-    button:focus-visible,
-    input:focus-visible {
-      outline: 2px solid var(--accent-gold);
-      outline-offset: 2px;
-    }
-
-    .lock-floating {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 120px;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.85;
-      filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.55));
-      transition: opacity 0.3s ease;
-    }
-
-    .lock-floating img {
-      display: block;
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <title>Advent Calendar 🎄</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0b2713; /* deep green background */
+            --bg-accent: #14532d; /* lighter green */
+            --card-bg: #fefdf8; /* warm off-white */
+            --card-border: #e4e4e4;
+            --door-red: #b91c1c;
+            --door-red-dark: #7f1d1d;
+            --door-green: #166534;
+            --door-cream: #fef3c7;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-gold: #f59e0b;
+            --accent-gold-soft: #fef3c7;
+            --accent-green: #16a34a;
+            --error: #dc2626;
+
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+            --shadow-soft: 0 14px 40px rgba(0, 0, 0, 0.45);
+            --transition-fast: 0.18s ease-out;
+            --transition-slow: 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: "Nunito", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+            sans-serif;
+            background: radial-gradient(circle at top, #15803d 0, transparent 55%),
+            radial-gradient(circle at bottom, #7f1d1d 0, transparent 60%),
+            var(--bg);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        /* Falling snow – more visible */
+        .snow-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 999;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.8) 1.5px, transparent 1.5px),
+            radial-gradient(circle, rgba(255, 255, 255, 0.6) 1.2px, transparent 1.2px),
+            radial-gradient(circle, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+            background-size: 200px 200px, 160px 160px, 120px 120px;
+            animation: snowFall 25s linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes snowFall {
+            0% {
+                background-position: 0 0, 40px -40px, 80px -80px;
+            }
+            100% {
+                background-position: 0 600px, 40px 560px, 80px 520px;
+            }
+        }
+
+        .app {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-soft);
+            padding: 20px 16px 20px;
+        }
+
+        @media (min-width: 640px) {
+            .card {
+                padding: 24px;
+            }
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .title-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .title {
+            font-size: 1.4rem;
+            letter-spacing: 0.04em;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title span.emoji {
+            font-size: 1.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .subtitle .pill {
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .date-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+        }
+
+        .calendar {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        @media (min-width: 640px) {
+            .calendar {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 12px;
+            }
+        }
+
+        /* DOORS – split in the middle like a little pair of doors */
+
+        .door {
+            position: relative;
+            height: 86px;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            background: #e2e8f0;
+            padding: 4px;
+            border: 1px solid #d4d4d8;
+            perspective: 1400px;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        @media (min-width: 640px) {
+            .door {
+                height: 102px;
+            }
+        }
+
+        .door:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 22px rgba(15, 23, 42, 0.22);
+        }
+
+        .door-back {
+            position: absolute;
+            inset: 6px;
+            border-radius: calc(var(--radius-lg) - 6px);
+            background: var(--door-cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--door-red-dark);
+            border: 1px solid rgba(148, 27, 27, 0.15);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+            inset 0 12px 24px rgba(15, 23, 42, 0.08);
+            z-index: 1;
+        }
+
+        .door-back-icon {
+            font-size: 1.4rem;
+        }
+
+        .door-panels {
+            position: absolute;
+            inset: 4px;
+            display: flex;
+            border-radius: calc(var(--radius-lg) - 4px);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .door-panel {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff7ed;
+            background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+            inset 0 -12px 18px rgba(15, 23, 42, 0.25);
+            transition: transform var(--transition-slow);
+            transform-origin: left center;
+        }
+
+        .door-panel.right {
+            transform-origin: right center;
+        }
+
+        .door-panel + .door-panel {
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .door-panel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.15));
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .door-panel-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-shadow: 0 6px 10px rgba(0, 0, 0, 0.45);
+            position: relative;
+            z-index: 1;
+        }
+
+        .door-number {
+            font-size: 1.1rem;
+        }
+
+        .door-accent {
+            font-size: 1.2rem;
+        }
+
+        .door.unlocked .door-panel {
+            background: linear-gradient(135deg, #15803d, #166534);
+        }
+
+        .door.locked .door-panel {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+        }
+
+        .door.open .door-panel.left {
+            transform: rotateY(-120deg);
+        }
+
+        .door.open .door-panel.right {
+            transform: rotateY(120deg);
+        }
+
+        .door.shake .door-panels {
+            animation: windowShake 0.35s ease-in-out;
+        }
+
+        @keyframes windowShake {
+            0% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-5px);
+            }
+            50% {
+                transform: translateX(5px);
+            }
+            75% {
+                transform: translateX(-3px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+
+        .dot-small {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--accent-gold);
+        }
+
+        .calendar-footer {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .calendar-footer-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tiny {
+            font-size: 0.78rem;
+        }
+
+        .love-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .love-note span.heart {
+            font-size: 0.95rem;
+            color: #dc2626;
+        }
+
+        /* LOCK SCREEN – flat style */
+
+        .lock-screen-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .lock-card {
+            width: 100%;
+            max-width: 360px;
+            background: #fefdf8;
+            border-radius: var(--radius-xl);
+            border: 1px solid #e5e7eb;
+            padding: 20px 18px 16px;
+            box-shadow: var(--shadow-soft);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lock-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                    -45deg,
+                    rgba(248, 250, 252, 0),
+                    rgba(248, 250, 252, 0) 10px,
+                    rgba(248, 250, 252, 0.5) 10px,
+                    rgba(248, 250, 252, 0.5) 20px
+            );
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .lock-card-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .lock-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .lock-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #1f2937;
+        }
+
+        .lock-tagline {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .lock-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .lock-input-row input {
+            flex: 1;
+            padding: 9px 11px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #111827;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .lock-input-row input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn {
+            border-radius: 999px;
+            border: none;
+            padding: 9px 16px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: linear-gradient(to right, #f59e0b, #f97316);
+            color: #111827;
+            box-shadow: 0 8px 22px rgba(180, 83, 9, 0.4);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(180, 83, 9, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 16px rgba(180, 83, 9, 0.4);
+        }
+
+        .lock-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .lock-error {
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: var(--error);
+            min-height: 1.1em;
+        }
+
+        .lock-card.shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-6px);
+            }
+            50% {
+                transform: translateX(6px);
+            }
+            75% {
+                transform: translateX(-4px);
+            }
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        /* MODAL */
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 40;
+        }
+
+        .modal-backdrop.visible {
+            display: flex;
+        }
+
+        .modal {
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            background: #fefdf8;
+            border-radius: var(--radius-xl);
+            border: 1px solid #e5e7eb;
+            box-shadow: var(--shadow-soft);
+            padding: 18px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            .modal {
+                padding: 20px 20px 18px;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #111827;
+        }
+
+        .pill-soft {
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 0.75rem;
+            border: 1px solid #e5e7eb;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .modal-close {
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #f3f4f6;
+            color: #4b5563;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: #374151;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-body p + p {
+            margin-top: 10px;
+        }
+
+        .modal-body img,
+        .modal-body video {
+            max-width: 100%;
+            border-radius: 16px;
+            margin: 12px 0;
+            display: block;
+        }
+
+        .modal-body audio {
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .modal-star-burst {
+            position: absolute;
+            left: 50%;
+            top: 40%;
+            width: 240px;
+            height: 240px;
+            transform: translate(-50%, -50%) scale(0.4);
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7), transparent 55%),
+            radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 40%),
+            radial-gradient(circle at 70% 40%, rgba(255, 255, 255, 0.35), transparent 45%);
+            opacity: 0;
+            filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.4));
+            pointer-events: none;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+        }
+
+        .modal-star-burst::after {
+            content: "";
+            position: absolute;
+            inset: -30%;
+            background: conic-gradient(
+                    from 0deg,
+                    rgba(255, 255, 255, 0.45),
+                    transparent 25%,
+                    rgba(255, 255, 255, 0.3) 45%,
+                    transparent 70%
+            );
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+
+        .modal-star-burst.burst-active {
+            animation: modalStarBurst 1s ease-out forwards;
+        }
+
+        @keyframes modalStarBurst {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.4) rotate(-10deg);
+            }
+            40% {
+                opacity: 0.85;
+                transform: translate(-50%, -50%) scale(1) rotate(5deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.4) rotate(12deg);
+            }
+        }
+
+        .modal-footer {
+            margin-top: 10px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 0.8rem;
+            color: #6b7280;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge-soft {
+            border-radius: 999px;
+            padding: 3px 9px;
+            border: 1px solid #e5e7eb;
+            background: #f3f4f6;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-soft .dot-small {
+            background: var(--accent-green);
+        }
+
+        /* Focus styles */
+        button,
+        input {
+            font-family: inherit;
+        }
+
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--accent-gold);
+            outline-offset: 2px;
+        }
+
+        .lock-floating {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 120px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.85;
+            filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.55));
+            transition: opacity 0.3s ease;
+        }
+
+        .lock-floating img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
-  <div class="snow-overlay" aria-hidden="true"></div>
+<div class="snow-overlay" aria-hidden="true"></div>
 
-  <!-- Password Lock Screen -->
-  <div class="lock-screen-backdrop" id="lockScreen">
+<!-- Password Lock Screen -->
+<div class="lock-screen-backdrop" id="lockScreen">
     <div class="lock-floating" aria-hidden="true" data-buddy="0">
-      <img src="images/zara.png" alt="" loading="lazy" />
+        <img src="images/zara.png" alt="" loading="lazy"/>
     </div>
     <div class="lock-floating" aria-hidden="true" data-buddy="1">
-      <img src="images/zara2.png" alt="" loading="lazy" />
+        <img src="images/zara2.png" alt="" loading="lazy"/>
     </div>
     <div class="lock-floating" aria-hidden="true" data-buddy="1">
-      <img src="images/zara3.png" alt="" loading="lazy" />
+        <img src="images/zara3.png" alt="" loading="lazy"/>
     </div>
     <div class="lock-floating" aria-hidden="true" data-buddy="1">
-      <img src="images/zara4.png" alt="" loading="lazy" />
+        <img src="images/zara4.png" alt="" loading="lazy"/>
     </div>
     <div class="lock-floating" aria-hidden="true" data-buddy="1">
-      <img src="images/zara5.png" alt="" loading="lazy" />
+        <img src="images/zara5.png" alt="" loading="lazy"/>
     </div>
     <div class="lock-card" id="lockCard">
-      <div class="lock-card-inner">
-        <div class="lock-card-header">
-          <div>
-            <div class="lock-title">Heyyy, Carolina, is that you?</div>
-            <div class="lock-tagline">
-              Já que o ano passado choraste por não ter um calendário do advento... 🎄
+        <div class="lock-card-inner">
+            <div class="lock-card-header">
+                <div>
+                    <div class="lock-title">Heyyy, Carolina, is that you?</div>
+                    <div class="lock-tagline">
+                        Já que o ano passado choraste por não ter um calendário do advento... 🎄
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div class="lock-input-row">
-          <input
-            type="password"
-            id="passwordInput"
-            placeholder="Palavra mágica"
-            autocomplete="off"
-          />
-          <button class="btn" id="unlockBtn">
-            <span>Unlock</span> <span>🔓</span>
-          </button>
-        </div>
+            <div class="lock-input-row">
+                <input
+                        type="password"
+                        id="passwordInput"
+                        placeholder="Palavra mágica"
+                        autocomplete="off"
+                />
+                <button class="btn" id="unlockBtn">
+                    <span>Unlock</span> <span>🔓</span>
+                </button>
+            </div>
 
-        <div class="lock-error" id="lockError"></div>
-      </div>
+            <div class="lock-error" id="lockError"></div>
+        </div>
     </div>
-  </div>
+</div>
 
-  <!-- Main App -->
-  <div class="app" id="app" style="opacity: 0; pointer-events: none;">
+<!-- Main App -->
+<div class="app" id="app" style="opacity: 0; pointer-events: none;">
     <div class="card" aria-label="Advent calendar">
-      <header class="header">
-        <div class="title-wrap">
-          <h1 class="title">
-            <span class="emoji">🎄</span> Calendário do Advento 2025
-          </h1>
-          <div class="subtitle">
-            <span>Uma pequena surpresa, sem calorias, todos os dias</span>
-          </div>
-        </div>
-        <div class="date-badge" id="todayBadge">
-          <span class="date-dot"></span>
-          <span id="todayText">Loading…</span>
-        </div>
-      </header>
+        <header class="header">
+            <div class="title-wrap">
+                <h1 class="title">
+                    <span class="emoji">🎄</span> Calendário do Advento 2025
+                </h1>
+                <div class="subtitle">
+                    <span>Uma pequena surpresa, sem calorias, todos os dias</span>
+                </div>
+            </div>
+            <div class="date-badge" id="todayBadge">
+                <span class="date-dot"></span>
+                <span id="todayText">Loading…</span>
+            </div>
+        </header>
 
-      <section class="calendar" id="calendarGrid">
-        <!-- Doors injected by JavaScript -->
-      </section>
+        <section class="calendar" id="calendarGrid">
+            <!-- Doors injected by JavaScript -->
+        </section>
     </div>
-  </div>
+</div>
 
-  <!-- Modal for content -->
-  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+<!-- Modal for content -->
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
-      <span class="modal-star-burst" aria-hidden="true"></span>
-      <header class="modal-header">
-        <div class="modal-title">
-          <span id="modalEmoji">✨</span>
-          <span id="modalTitle">Day</span>
-          <span class="pill-soft" id="modalDateLabel"></span>
+        <span class="modal-star-burst" aria-hidden="true"></span>
+        <header class="modal-header">
+            <div class="modal-title">
+                <span id="modalEmoji">✨</span>
+                <span id="modalTitle">Day</span>
+                <span class="pill-soft" id="modalDateLabel"></span>
+            </div>
+            <button class="modal-close" id="modalCloseBtn">
+                <span>Close</span> <span>✖</span>
+            </button>
+        </header>
+        <div class="modal-body" id="modalBody">
+            <!-- Injected content -->
         </div>
-        <button class="modal-close" id="modalCloseBtn">
-          <span>Close</span> <span>✖</span>
-        </button>
-      </header>
-      <div class="modal-body" id="modalBody">
-        <!-- Injected content -->
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Background music (replace src with your own file) -->
-  <audio id="backgroundAudio" src="audio/christmas-song.mp3" preload="auto" loop></audio>
+<!-- Background music (replace src with your own file) -->
+<audio id="backgroundAudio" src="audio/christmas-song.mp3" preload="auto" loop></audio>
 
-  <script>
+<script>
     /**********************************************
      * CONFIGURATION – EDIT THESE PARTS
      **********************************************/
@@ -831,30 +845,40 @@
 
     const dayContent = {};
     for (let day = 1; day <= TOTAL_DAYS; day++) {
-      dayContent[day] = {
-        title: `Dia ${day}`,
-        emoji: "✨",
-        html: `
+        dayContent[day] = {
+            title: `Dia ${day}`,
+            emoji: "✨",
+            html: `
           <p>Ups... Provavelmente estou ocupado a mimar a minha namorada e aida não tive tempo para terminar o dia de hoje.</p>
           <p>Por favor volta mais tarde.</p>
         `,
-      };
+        };
     }
 
     dayContent[1] = {
-      title: "Dia 1 – Uma imagem vale mais...",
-      emoji: "🌟",
-      html: `
+        title: "Dia 1 – Uma imagem vale mais...",
+        emoji: "🌟",
+        html: `
         <p>Hoje é dia 1, e sendo o primeiro dia do advento, gostava que partilhasses comigo uma imagem que te faça sentir o mesmo que sentiste quando estivemos juntos pela primeira vez.</p>
         <p>Para mim, é esta:</p>
         <img src="images/foggy_beach.jpg" loading="lazy" />
       `,
     };
 
+    dayContent[2] = {
+        title: "Dia 2 – Connections",
+        emoji: "🎄",
+        html: `
+        <p>Se o NewYorkTimes soubesse da nossa vida privada, este seria o resultado.</p>
+         <p>Não é nada fácil... Boa sorte! </p>
+      <img src="images/connect-4.png" loading="lazy" />
+      `,
+    };
+
     dayContent[24] = {
-      title: "Day 24 – Christmas Eve",
-      emoji: "🎁",
-      html: `
+        title: "Day 24 – Christmas Eve",
+        emoji: "🎁",
+        html: `
         <p>It's Christmas Eve. ✨</p>
         <p>Whatever today looks like, remember: you're my favourite part of every season.</p>
         <p>Open this somewhere comfy, preferably with a blanket and something warm to drink. ☕</p>
@@ -886,389 +910,391 @@
     const floatingBuddies = Array.from(document.querySelectorAll(".lock-floating"));
     const openedDaysKey = `adventCalendarOpenedDays-${CALENDAR_YEAR}`;
     const ERROR_SOUND_FILES = [
-      "sound-errors/error-1.m4a",
-      "sound-errors/error-2.m4a",
-      "sound-errors/error-3.m4a",
-      "sound-errors/error-4.m4a",
-      "sound-errors/error-5.m4a",
-      "sound-errors/error-6.m4a",
+        "sound-errors/error-1.m4a",
+        "sound-errors/error-2.m4a",
+        "sound-errors/error-3.m4a",
+        "sound-errors/error-4.m4a",
+        "sound-errors/error-5.m4a",
+        "sound-errors/error-6.m4a",
     ];
     const openedDays = new Set();
     const floatingSprites = floatingBuddies.map((wrapper, index) => ({
-      wrapper,
-      img: wrapper.querySelector("img"),
-      velocity: {
-        x: 0.12 + index * 0.03,
-        y: 0.15 + index * 0.025,
-      },
-      position: {
-        x: 50 + index * 80,
-        y: 70 + index * 40,
-      },
+        wrapper,
+        img: wrapper.querySelector("img"),
+        velocity: {
+            x: 0.12 + index * 0.03,
+            y: 0.15 + index * 0.025,
+        },
+        position: {
+            x: 50 + index * 80,
+            y: 70 + index * 40,
+        },
     }));
     let floatingAnimationId = null;
     let floatingLastTimestamp = null;
 
     function loadOpenedDays() {
-      try {
-        const stored = localStorage.getItem(openedDaysKey);
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          parsed.forEach((day) => {
-            if (typeof day === "number" && Number.isFinite(day)) {
-              openedDays.add(day);
+        try {
+            const stored = localStorage.getItem(openedDaysKey);
+            if (!stored) return;
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                parsed.forEach((day) => {
+                    if (typeof day === "number" && Number.isFinite(day)) {
+                        openedDays.add(day);
+                    }
+                });
             }
-          });
+        } catch (err) {
+            console.warn("Unable to read opened days from storage", err);
         }
-      } catch (err) {
-        console.warn("Unable to read opened days from storage", err);
-      }
     }
 
     function loadErrorSounds() {
-      ERROR_SOUND_FILES.forEach((url) => {
-        const audio = new Audio(url);
-        audio.preload = "auto";
-        errorSounds.push(audio);
-      });
+        ERROR_SOUND_FILES.forEach((url) => {
+            const audio = new Audio(url);
+            audio.preload = "auto";
+            errorSounds.push(audio);
+        });
     }
 
     function playErrorSound() {
-      if (!errorSounds.length) return;
+        if (!errorSounds.length) return;
 
-      const clip = errorSounds[errorSoundIndex];
+        const clip = errorSounds[errorSoundIndex];
 
-      // Reset ONLY the clip being played
-      clip.pause();
-      clip.currentTime = 0;
+        // Reset ONLY the clip being played
+        clip.pause();
+        clip.currentTime = 0;
 
-      // Play it
-      clip.play().catch(() => {});
+        // Play it
+        clip.play().catch(() => {
+        });
 
-      // Move to next sound
-      errorSoundIndex = (errorSoundIndex + 1) % errorSounds.length;
+        // Move to next sound
+        errorSoundIndex = (errorSoundIndex + 1) % errorSounds.length;
     }
 
     function persistOpenedDays() {
-      localStorage.setItem(openedDaysKey, JSON.stringify(Array.from(openedDays)));
+        localStorage.setItem(openedDaysKey, JSON.stringify(Array.from(openedDays)));
     }
 
     function markDayOpened(day) {
-      if (openedDays.has(day)) return;
-      openedDays.add(day);
-      persistOpenedDays();
+        if (openedDays.has(day)) return;
+        openedDays.add(day);
+        persistOpenedDays();
     }
 
     function animateFloating(timestamp) {
-      if (!floatingSprites.length) return;
-      if (!floatingLastTimestamp) floatingLastTimestamp = timestamp;
-      const delta = timestamp - floatingLastTimestamp;
-      floatingLastTimestamp = timestamp;
+        if (!floatingSprites.length) return;
+        if (!floatingLastTimestamp) floatingLastTimestamp = timestamp;
+        const delta = timestamp - floatingLastTimestamp;
+        floatingLastTimestamp = timestamp;
 
-      floatingSprites.forEach((sprite) => {
-        const { wrapper, velocity, position } = sprite;
-        position.x += velocity.x * delta;
-        position.y += velocity.y * delta;
+        floatingSprites.forEach((sprite) => {
+            const {wrapper, velocity, position} = sprite;
+            position.x += velocity.x * delta;
+            position.y += velocity.y * delta;
 
-        const width = wrapper.offsetWidth || 0;
-        const height = wrapper.offsetHeight || 0;
-        const maxX = Math.max(0, window.innerWidth - width - 20);
-        const maxY = Math.max(0, window.innerHeight - height - 20);
+            const width = wrapper.offsetWidth || 0;
+            const height = wrapper.offsetHeight || 0;
+            const maxX = Math.max(0, window.innerWidth - width - 20);
+            const maxY = Math.max(0, window.innerHeight - height - 20);
 
-        if (position.x <= 10 || position.x >= maxX) {
-          velocity.x *= -1;
-          position.x = Math.min(Math.max(position.x, 10), maxX);
-        }
-        if (position.y <= 10 || position.y >= maxY) {
-          velocity.y *= -1;
-          position.y = Math.min(Math.max(position.y, 10), maxY);
-        }
+            if (position.x <= 10 || position.x >= maxX) {
+                velocity.x *= -1;
+                position.x = Math.min(Math.max(position.x, 10), maxX);
+            }
+            if (position.y <= 10 || position.y >= maxY) {
+                velocity.y *= -1;
+                position.y = Math.min(Math.max(position.y, 10), maxY);
+            }
 
-        wrapper.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
-      });
+            wrapper.style.transform = `translate3d(${position.x}px, ${position.y}px, 0)`;
+        });
 
-      floatingAnimationId = requestAnimationFrame(animateFloating);
+        floatingAnimationId = requestAnimationFrame(animateFloating);
     }
 
     function beginFloatingAnimation() {
-      floatingBuddies.forEach((wrapper, index) => {
-        wrapper.style.opacity = index === 0 ? "0.9" : "0.75";
-      });
-      floatingLastTimestamp = null;
-      floatingAnimationId = requestAnimationFrame(animateFloating);
+        floatingBuddies.forEach((wrapper, index) => {
+            wrapper.style.opacity = index === 0 ? "0.9" : "0.75";
+        });
+        floatingLastTimestamp = null;
+        floatingAnimationId = requestAnimationFrame(animateFloating);
     }
 
     function startFloatingBuddy() {
-      if (!floatingSprites.length || floatingAnimationId) return;
+        if (!floatingSprites.length || floatingAnimationId) return;
 
-      const spritesNeedingLoad = floatingSprites.filter(
-        ({ img }) => img && !img.complete
-      );
-
-      if (!spritesNeedingLoad.length) {
-        beginFloatingAnimation();
-        return;
-      }
-
-      let remaining = spritesNeedingLoad.length;
-      spritesNeedingLoad.forEach(({ img }) => {
-        img.addEventListener(
-          "load",
-          () => {
-            remaining -= 1;
-            if (remaining === 0) beginFloatingAnimation();
-          },
-          { once: true }
+        const spritesNeedingLoad = floatingSprites.filter(
+            ({img}) => img && !img.complete
         );
-      });
+
+        if (!spritesNeedingLoad.length) {
+            beginFloatingAnimation();
+            return;
+        }
+
+        let remaining = spritesNeedingLoad.length;
+        spritesNeedingLoad.forEach(({img}) => {
+            img.addEventListener(
+                "load",
+                () => {
+                    remaining -= 1;
+                    if (remaining === 0) beginFloatingAnimation();
+                },
+                {once: true}
+            );
+        });
     }
 
     function stopFloatingBuddy() {
-      if (!floatingSprites.length) return;
-      if (floatingAnimationId) {
-        cancelAnimationFrame(floatingAnimationId);
-        floatingAnimationId = null;
-      }
-      floatingLastTimestamp = null;
-      floatingBuddies.forEach((wrapper) => {
-        wrapper.style.opacity = "0";
-      });
+        if (!floatingSprites.length) return;
+        if (floatingAnimationId) {
+            cancelAnimationFrame(floatingAnimationId);
+            floatingAnimationId = null;
+        }
+        floatingLastTimestamp = null;
+        floatingBuddies.forEach((wrapper) => {
+            wrapper.style.opacity = "0";
+        });
     }
+
     let audioStarted = false;
     const errorSounds = [];
     let errorSoundIndex = 0;
 
     function startBackgroundAudio() {
-      if (!backgroundAudio || audioStarted) return;
-      backgroundAudio.volume = 0.10;
+        if (!backgroundAudio || audioStarted) return;
+        backgroundAudio.volume = 0.10;
 
-      const resumeOnInteraction = () => {
-        backgroundAudio
-          .play()
-          .then(() => {
-            audioStarted = true;
-            document.removeEventListener("pointerdown", resumeOnInteraction);
-          })
-          .catch(() => {
-            document.addEventListener("pointerdown", resumeOnInteraction, { once: true });
-          });
-      };
+        const resumeOnInteraction = () => {
+            backgroundAudio
+                .play()
+                .then(() => {
+                    audioStarted = true;
+                    document.removeEventListener("pointerdown", resumeOnInteraction);
+                })
+                .catch(() => {
+                    document.addEventListener("pointerdown", resumeOnInteraction, {once: true});
+                });
+        };
 
-      const playPromise = backgroundAudio.play();
-      if (playPromise && typeof playPromise.then === "function") {
-        playPromise
-          .then(() => {
+        const playPromise = backgroundAudio.play();
+        if (playPromise && typeof playPromise.then === "function") {
+            playPromise
+                .then(() => {
+                    audioStarted = true;
+                })
+                .catch(() => {
+                    document.addEventListener("pointerdown", resumeOnInteraction, {once: true});
+                });
+        } else {
             audioStarted = true;
-          })
-          .catch(() => {
-            document.addEventListener("pointerdown", resumeOnInteraction, { once: true });
-          });
-      } else {
-        audioStarted = true;
-      }
+        }
     }
 
     function formatDateLabel(date) {
-      const options = { weekday: "short", day: "numeric", month: "short" };
-      return date.toLocaleDateString(undefined, options);
+        const options = {weekday: "short", day: "numeric", month: "short"};
+        return date.toLocaleDateString(undefined, options);
     }
 
     function setTodayBadge() {
-      const now = new Date();
-      todayTextEl.textContent = formatDateLabel(now);
+        const now = new Date();
+        todayTextEl.textContent = formatDateLabel(now);
     }
 
     function getCalendarDate(day) {
-      return new Date(CALENDAR_YEAR, 11, day); // December = 11
+        return new Date(CALENDAR_YEAR, 11, day); // December = 11
     }
 
     function isDayUnlocked(day) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      const calendarMonth = 11; // December
-      const thisYearDecember =
-        today.getFullYear() === CALENDAR_YEAR && today.getMonth() === calendarMonth;
+        const calendarMonth = 11; // December
+        const thisYearDecember =
+            today.getFullYear() === CALENDAR_YEAR && today.getMonth() === calendarMonth;
 
-      const targetDate = getCalendarDate(day);
+        const targetDate = getCalendarDate(day);
 
-      if (thisYearDecember) {
-        return today >= targetDate;
-      }
+        if (thisYearDecember) {
+            return today >= targetDate;
+        }
 
-      if (
-        today.getFullYear() > CALENDAR_YEAR ||
-        (today.getFullYear() === CALENDAR_YEAR && today.getMonth() > calendarMonth)
-      ) {
-        return true;
-      }
+        if (
+            today.getFullYear() > CALENDAR_YEAR ||
+            (today.getFullYear() === CALENDAR_YEAR && today.getMonth() > calendarMonth)
+        ) {
+            return true;
+        }
 
-      return false;
+        return false;
     }
 
     function createDoor(day) {
-      const unlocked = isDayUnlocked(day);
-      const door = document.createElement("button");
-      door.className = "door" + (unlocked ? " unlocked" : " locked");
-      door.type = "button";
-      door.setAttribute(
-        "aria-label",
-        unlocked ? `Open Day ${day}` : `Day ${day} is locked until its date`
-      );
+        const unlocked = isDayUnlocked(day);
+        const door = document.createElement("button");
+        door.className = "door" + (unlocked ? " unlocked" : " locked");
+        door.type = "button";
+        door.setAttribute(
+            "aria-label",
+            unlocked ? `Open Day ${day}` : `Day ${day} is locked until its date`
+        );
 
-      const panels = document.createElement("div");
-      panels.className = "door-panels";
+        const panels = document.createElement("div");
+        panels.className = "door-panels";
 
-      const leftPanel = document.createElement("div");
-      leftPanel.className = "door-panel left";
-      const leftContent = document.createElement("div");
-      leftContent.className = "door-panel-content";
-      const numberSpan = document.createElement("span");
-      numberSpan.className = "door-number";
-      numberSpan.textContent = String(day).padStart(2, "0");
-      leftContent.appendChild(numberSpan);
-      leftPanel.appendChild(leftContent);
+        const leftPanel = document.createElement("div");
+        leftPanel.className = "door-panel left";
+        const leftContent = document.createElement("div");
+        leftContent.className = "door-panel-content";
+        const numberSpan = document.createElement("span");
+        numberSpan.className = "door-number";
+        numberSpan.textContent = String(day).padStart(2, "0");
+        leftContent.appendChild(numberSpan);
+        leftPanel.appendChild(leftContent);
 
-      const rightPanel = document.createElement("div");
-      rightPanel.className = "door-panel right";
-      const rightContent = document.createElement("div");
-      rightContent.className = "door-panel-content";
-      const accent = document.createElement("span");
-      accent.className = "door-accent";
-      accent.textContent = day % 5 === 0 ? "🎁" : day % 3 === 0 ? "⭐" : "❄️";
-      rightContent.appendChild(accent);
-      rightPanel.appendChild(rightContent);
+        const rightPanel = document.createElement("div");
+        rightPanel.className = "door-panel right";
+        const rightContent = document.createElement("div");
+        rightContent.className = "door-panel-content";
+        const accent = document.createElement("span");
+        accent.className = "door-accent";
+        accent.textContent = day % 5 === 0 ? "🎁" : day % 3 === 0 ? "⭐" : "❄️";
+        rightContent.appendChild(accent);
+        rightPanel.appendChild(rightContent);
 
-      panels.appendChild(leftPanel);
-      panels.appendChild(rightPanel);
+        panels.appendChild(leftPanel);
+        panels.appendChild(rightPanel);
 
-      const back = document.createElement("div");
-      back.className = "door-back";
-      back.innerHTML = `<div class="door-back-icon">💌</div>`;
+        const back = document.createElement("div");
+        back.className = "door-back";
+        back.innerHTML = `<div class="door-back-icon">💌</div>`;
 
-      door.appendChild(back);
-      door.appendChild(panels);
+        door.appendChild(back);
+        door.appendChild(panels);
 
-      if (openedDays.has(day)) {
-        door.classList.add("open");
-      }
+        if (openedDays.has(day)) {
+            door.classList.add("open");
+        }
 
-      door.addEventListener("click", () => handleDoorClick(door, day));
+        door.addEventListener("click", () => handleDoorClick(door, day));
 
-      return door;
+        return door;
     }
 
     function handleDoorClick(doorEl, day) {
-      const isUnlockedNow = isDayUnlocked(day);
+        const isUnlockedNow = isDayUnlocked(day);
 
-      if (!isUnlockedNow) {
-        doorEl.classList.add("shake");
-        setTimeout(() => doorEl.classList.remove("shake"), 380);
-        playErrorSound();
-      return;
-    }
+        if (!isUnlockedNow) {
+            doorEl.classList.add("shake");
+            setTimeout(() => doorEl.classList.remove("shake"), 380);
+            playErrorSound();
+            return;
+        }
 
-      markDayOpened(day);
-      doorEl.classList.add("open");
-      showDayModal(day);
+        markDayOpened(day);
+        doorEl.classList.add("open");
+        showDayModal(day);
     }
 
     function triggerModalStarBurst(emoji = "✨") {
-      if (!modalStarBurst) return;
-      modalStarBurst.textContent = emoji;
-      modalStarBurst.classList.remove("burst-active");
-      void modalStarBurst.offsetWidth;
-      modalStarBurst.classList.add("burst-active");
+        if (!modalStarBurst) return;
+        modalStarBurst.textContent = emoji;
+        modalStarBurst.classList.remove("burst-active");
+        void modalStarBurst.offsetWidth;
+        modalStarBurst.classList.add("burst-active");
     }
 
     function showDayModal(day) {
-      const content =
-        dayContent[day] || {
-          title: `Day ${day}`,
-          emoji: "✨",
-          html: `<p>No content added yet for this day. You can customize it in the code.</p>`,
-        };
+        const content =
+            dayContent[day] || {
+                title: `Day ${day}`,
+                emoji: "✨",
+                html: `<p>No content added yet for this day. You can customize it in the code.</p>`,
+            };
 
-      modalEmoji.textContent = content.emoji || "✨";
-      modalTitle.textContent = content.title || `Day ${day}`;
+        modalEmoji.textContent = content.emoji || "✨";
+        modalTitle.textContent = content.title || `Day ${day}`;
 
-      const date = getCalendarDate(day);
-      modalDateLabel.textContent = formatDateLabel(date);
-      modalBody.innerHTML = content.html || "";
-      triggerModalStarBurst(content.emoji || "✨");
+        const date = getCalendarDate(day);
+        modalDateLabel.textContent = formatDateLabel(date);
+        modalBody.innerHTML = content.html || "";
+        triggerModalStarBurst(content.emoji || "✨");
 
-      modalBackdrop.classList.add("visible");
-      modalBackdrop.setAttribute("aria-hidden", "false");
+        modalBackdrop.classList.add("visible");
+        modalBackdrop.setAttribute("aria-hidden", "false");
     }
 
     function hideModal() {
-      modalBackdrop.classList.remove("visible");
-      modalBackdrop.setAttribute("aria-hidden", "true");
+        modalBackdrop.classList.remove("visible");
+        modalBackdrop.setAttribute("aria-hidden", "true");
     }
 
     modalCloseBtn.addEventListener("click", hideModal);
     modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) hideModal();
+        if (e.target === modalBackdrop) hideModal();
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") hideModal();
+        if (e.key === "Escape") hideModal();
     });
 
     function renderCalendar() {
-      calendarGrid.innerHTML = "";
-      for (let day = 1; day <= TOTAL_DAYS; day++) {
-        calendarGrid.appendChild(createDoor(day));
-      }
+        calendarGrid.innerHTML = "";
+        for (let day = 1; day <= TOTAL_DAYS; day++) {
+            calendarGrid.appendChild(createDoor(day));
+        }
     }
 
     function unlockApp() {
-      stopFloatingBuddy();
-      lockScreenEl.style.display = "none";
-      appEl.style.opacity = "1";
-      appEl.style.pointerEvents = "auto";
-      startBackgroundAudio();
-    }
-
-    function handleUnlockAttempt() {
-      const value = passwordInput.value.trim();
-      if (!value) {
-        lockErrorEl.textContent = "You dumbbbb!";
-        lockCardEl.classList.add("shake");
-        setTimeout(() => lockCardEl.classList.remove("shake"), 360);
-        return;
-      }
-
-      if (value === PASSWORD) {
-        lockErrorEl.textContent = "";
-        localStorage.setItem("adventCalendarAccess", "granted");
-        unlockApp();
-      } else {
-        lockErrorEl.textContent = "That password doesn't look right. Try again. ✨";
-        passwordInput.select();
-        lockCardEl.classList.add("shake");
-        setTimeout(() => lockCardEl.classList.remove("shake"), 360);
-      }
-    }
-
-    unlockBtn.addEventListener("click", handleUnlockAttempt);
-    passwordInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleUnlockAttempt();
-    });
-
-    function initLockState() {
-      const hasAccess = localStorage.getItem("adventCalendarAccess") === "granted";
-      if (hasAccess) {
         stopFloatingBuddy();
         lockScreenEl.style.display = "none";
         appEl.style.opacity = "1";
         appEl.style.pointerEvents = "auto";
         startBackgroundAudio();
-      } else {
-        lockScreenEl.style.display = "flex";
-        startFloatingBuddy();
-      }
+    }
+
+    function handleUnlockAttempt() {
+        const value = passwordInput.value.trim();
+        if (!value) {
+            lockErrorEl.textContent = "You dumbbbb!";
+            lockCardEl.classList.add("shake");
+            setTimeout(() => lockCardEl.classList.remove("shake"), 360);
+            return;
+        }
+
+        if (value === PASSWORD) {
+            lockErrorEl.textContent = "";
+            localStorage.setItem("adventCalendarAccess", "granted");
+            unlockApp();
+        } else {
+            lockErrorEl.textContent = "That password doesn't look right. Try again. ✨";
+            passwordInput.select();
+            lockCardEl.classList.add("shake");
+            setTimeout(() => lockCardEl.classList.remove("shake"), 360);
+        }
+    }
+
+    unlockBtn.addEventListener("click", handleUnlockAttempt);
+    passwordInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleUnlockAttempt();
+    });
+
+    function initLockState() {
+        const hasAccess = localStorage.getItem("adventCalendarAccess") === "granted";
+        if (hasAccess) {
+            stopFloatingBuddy();
+            lockScreenEl.style.display = "none";
+            appEl.style.opacity = "1";
+            appEl.style.pointerEvents = "auto";
+            startBackgroundAudio();
+        } else {
+            lockScreenEl.style.display = "flex";
+            startFloatingBuddy();
+        }
     }
 
     loadOpenedDays();
@@ -1276,6 +1302,6 @@
     setTodayBadge();
     renderCalendar();
     initLockState();
-  </script>
+</script>
 </body>
 </html>
